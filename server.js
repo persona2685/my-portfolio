@@ -1,23 +1,21 @@
 const Contact = require("./Contact");
 require("dotenv").config();
+
 const mongoose = require("mongoose");
 const Project = require("./models/Project");
 const express = require("express");
 
 const app = express();
 
-const PORT = 3000;
-
 app.use(express.json());
-app.use(express.static("../"));
+app.use(express.static(__dirname));
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB connected!"))
     .catch((err) => console.log("MongoDB connection error:", err));
 
-
-
 app.get("/", (req, res) => {
-    res.send("Portfolio Backend is Running!");
+    res.sendFile(__dirname + "/index.html");
 });
 
 app.get("/api/projects", async (req, res) => {
@@ -25,9 +23,12 @@ app.get("/api/projects", async (req, res) => {
         const projects = await Project.find();
         res.json(projects);
     } catch (error) {
-        res.status(500).json({ message: "Error fetching projects" });
+        res.status(500).json({
+            message: "Error fetching projects"
+        });
     }
 });
+
 app.post("/api/contact", async (req, res) => {
     try {
         const { name, email, message } = req.body;
@@ -40,23 +41,36 @@ app.post("/api/contact", async (req, res) => {
 
         await contact.save();
 
-        res.json({ message: "Message sent successfully!" });
+        res.json({
+            message: "Message sent successfully!"
+        });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Failed to send message" });
+
+        res.status(500).json({
+            message: "Failed to send message"
+        });
     }
 });
 
 app.delete("/api/projects/:id", async (req, res) => {
     try {
         await Project.findByIdAndDelete(req.params.id);
-        res.json({ message: "Project deleted successfully" });
+
+        res.json({
+            message: "Project deleted successfully"
+        });
+
     } catch (error) {
-        res.status(500).json({ message: "Error deleting project" });
+        res.status(500).json({
+            message: "Error deleting project"
+        });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
 });
